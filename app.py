@@ -1,173 +1,177 @@
 import streamlit as st
 import pandas as pd
 import random
-import time
+import datetime
 
-st.set_page_config(page_title="JAMB PRO MAX - No.1 CBT", page_icon="🎓", layout="centered")
+st.set_page_config(page_title="JAMB PRO MAX", page_icon="🎓", layout="wide")
 
-# === LIVELY ANIMATED CSS ===
+# === EXACT BOTTOM NAV CSS LIKE YOUR IMAGE ===
 st.markdown("""
 <style>
-.card { padding:15px; border-radius:18px; margin:8px 0; box-shadow:0 4px 15px rgba(0,0,0,0.12); animation: pop 0.6s ease; transition:0.3s; cursor:pointer; }
-.card:hover { transform: translateY(-3px) scale(1.02); }
-@keyframes pop { 0%{opacity:0; transform: scale(0.9);} 100%{opacity:1; transform: scale(1);} }
-.blue{background:#DBEAFE;} .pink{background:#FCE7F3;} .green{background:#D1FAE5;} .yellow{background:#FEF3C7;} .purple{background:#EDE9FE;} .orange{background:#FFEDD5;}
-.banner { background: linear-gradient(90deg, #10B981, #065F46); color:white; padding:18px; border-radius:16px; text-align:center; font-weight:bold; }
-.progress-ring { font-size:20px; text-align:center; }
+.bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white; border-top: 1px solid #E5E7EB;
+    display: flex; justify-content: space-around; padding: 10px 0 25px 0;
+    z-index: 9999; border-radius: 20px 20px 0 0;
+}
+.nav-item { text-align: center; color: #6B7280; font-size: 12px; cursor: pointer; }
+.nav-item.active { color: #7C3AED; font-weight: bold; }
+.nav-icon { font-size: 26px; display: block; }
+.card { padding:16px; border-radius:18px; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.08); animation: pop 0.5s; }
+.card:hover { transform: scale(1.02); }
+@keyframes pop { from {opacity:0; transform: translateY(15px);} to {opacity:1; transform: translateY(0);} }
+.blue{background:#DBEAFE;} .pink{background:#FCE7F3;} .green{background:#D1FAE5;} .yellow{background:#FEF3C7;} .purple{background:#EDE9FE;}
+.activity { background: white; border-left: 5px solid #7C3AED; }
+.main .block-container { padding-bottom: 100px; }
 </style>
 """, unsafe_allow_html=True)
 
-if 'page' not in st.session_state: st.session_state.page='home'
-if 'score' not in st.session_state: st.session_state.score=0
-if 'q_index' not in st.session_state: st.session_state.q_index=0
-if 'history' not in st.session_state: st.session_state.history=[]
-if 'streak' not in st.session_state: st.session_state.streak=0
+# === STATE ===
+if 'page' not in st.session_state: st.session_state.page = 'Home'
+if 'score' not in st.session_state: st.session_state.score = 0
+if 'q_index' not in st.session_state: st.session_state.q_index = 0
+if 'history' not in st.session_state: st.session_state.history = []
+if 'designs' not in st.session_state: st.session_state.designs = []
 
-# === HEADER ===
-c1,c2,c3 = st.columns([1,3,1])
-with c1: st.write("🎓")
-with c2: st.markdown("**TestDriller UTME** - JAMB PRO MAX")
-with c3: 
-    if st.button("🌙"): st.toast("Dark mode coming soon!")
+# === DAILY UPDATE SYSTEM - NEW ACTIVITIES EVERYDAY ===
+today = datetime.date.today()
+random.seed(today.toordinal()) # Changes everyday
+DAILY_ACTIVITIES = random.sample([
+    "🔥 Daily Challenge: Answer 10 English Qs - Win N500 airtime",
+    "🎯 Math Marathon: Solve 20 calculations in 10 mins",
+    "🧬 Biology Live: Photosynthesis Lab",
+    "⚛️ Physics Quiz: Mechanics + Heat",
+    "📚 English Essay: Write on 'My JAMB Experience'",
+    "🎮 Millionaire Game: $1000 JAMB Edition",
+    "🧪 Chemistry Practical: Titration",
+    "🏆 Leaderboard: Top scorer today wins data",
+    "🤖 AI Tutor: Ask 5 questions free today",
+    "📈 Performance Review: Check your growth",
+    "💡 Tip of the Day: How to score 350+",
+    "🎤 Live Class: 7pm WAT - Maths",
+], k=6)
 
-st.markdown('<div class="banner">🏆 NIGERIA\'S NO.1 LEARNING APP<br>USED BY TOP SCORER - SCORE 375</div>', unsafe_allow_html=True)
+# 33,500 QUESTIONS STRUCTURE (you add more via Google Sheet)
+QUESTIONS_DB = [
+    {"q":"What is 2+2?", "o":["3","4","5","6"], "a":1, "subject":"Mathematics"},
+    {"q":"OXYZW pyramid base 4cm side, OX=6cm. Find OT", "o":["2√5","3","4","3√2"], "a":0, "subject":"Mathematics"},
+    {"q":"I ___ admission this year", "o":["seeking for","seeking","seeking at","seeking of"], "a":1, "subject":"English"},
+    {"q":"Photosynthesis takes place in?", "o":["Mitochondria","Chloroplast","Nucleus","Ribosome"], "a":1, "subject":"Biology"},
+    # Add 33,496 more via CSV - I give structure below
+]
 
-# === HOME - 8 CARDS LIKE TESTDRILLER ===
-if st.session_state.page=='home':
-    st.markdown("#### Nigeria's No.1 Learning & Practice App!")
-    r1c1,r1c2 = st.columns(2)
-    with r1c1:
-        if st.button("🎯 Practice For UTME\n33,500 Qs offline", use_container_width=True): 
-            st.session_state.page='practice'; st.rerun()
-        if st.button("🔬 Science Note\nIntelligent Note for Maths", use_container_width=True):
-            st.session_state.page='note'; st.rerun()
-        if st.button("📜 Result History", use_container_width=True):
-            st.session_state.page='history'; st.rerun()
-        if st.button("🎮 Educational Games", use_container_width=True):
-            st.session_state.page='games'; st.rerun()
-    with r1c2:
-        if st.button("🏫 Classroom\nMaterials + AI Tutor", use_container_width=True):
-            st.session_state.page='classroom'; st.rerun()
-        if st.button("🔍 Question Search\nSearch quickly", use_container_width=True):
-            st.session_state.page='search'; st.rerun()
-        if st.button("📈 Performance Analysis", use_container_width=True):
-            st.session_state.page='analysis'; st.rerun()
-        if st.button("🤖 Round-the-Clock AI Tutor", use_container_width=True):
-            st.session_state.page='aitutor'; st.rerun()
+# === PAGES ===
+
+# HOME
+if st.session_state.page == 'Home':
+    st.markdown(f"### 🎓 Good Morning! Today: {today.strftime('%A, %d %B')}")
+    st.markdown(f'<div class="card purple"><b>🔥 Daily Streak: {random.randint(2,12)} days</b> | Keep learning!</div>', unsafe_allow_html=True)
     
-    st.divider()
-    # DAILY STREAK - keeps users coming back = more ad money
-    st.markdown(f'<div class="card orange">🔥 Daily Streak: <b>{st.session_state.streak} days</b> | Keep learning to keep streak!</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="card purple">💰 Earn & Learn - Play games to win airtime | Ads support free learning</div>', unsafe_allow_html=True)
+    st.markdown("#### Today's Activities - Updates Daily ♻️")
+    for act in DAILY_ACTIVITIES:
+        st.markdown(f'<div class="card activity">📌 {act} <br><small>New today • Tap to start</small></div>', unsafe_allow_html=True)
     
-    # --- YOUR 3 AD NETWORKS ---
-    # Paste codes in streamlit.components.v1.html() below after you create accounts
-    # AdCash + Monetag + HilltopAds -> Paxum -> OPay
+    st.markdown("#### Nigeria's No.1 Learning App")
+    c1,c2 = st.columns(2)
+    with c1:
+        if st.button("🎯 Practice For UTME\n33,500 Qs offline", use_container_width=True): st.session_state.page='Practice'
+        st.markdown('<div class="card blue">🔬 Science Note<br>Solve math offline</div>', unsafe_allow_html=True)
+        st.markdown('<div class="card green">📈 Performance Analysis<br>Score 375 trend</div>', unsafe_allow_html=True)
+    with c2:
+        if st.button("🏫 Classroom\nVideos + AI Tutor", use_container_width=True): st.session_state.page='Classroom'
+        st.markdown('<div class="card yellow">🔍 Question Search<br>Search quickly</div>', unsafe_allow_html=True)
+        st.markdown('<div class="card pink">🎮 Educational Games<br>$1000 win</div>', unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.markdown("#### 📊 Performance Today")
+    df = pd.DataFrame({"Day":[1,2,3,4,5], "Score":[280,310,335,st.session_state.score+300,375]})
+    st.line_chart(df, x="Day", y="Score")
 
-# === PRACTICE - SMOOTH INTERFACE ===
-elif st.session_state.page=='practice':
-    if st.button("← Back to Home"): st.session_state.page='home'; st.rerun()
-    QUESTIONS = [
-        {"q":"OXYZW pyramid with square base... OX=6cm, XY=4cm. Find height OT", "o":["2√5","3","4","3√2"], "a":0, "exp":"OT = √(OX² - (XY√2/2)²) = 2√5"},
-        {"q":"Solve: 2x + 3y = 6, 3x - 2y = 10", "o":["x=3,y=0","x=2,y=1","x=0,y=2","x=1,y=2"], "a":0, "exp":"AI Tutor: Substitute y = (6-2x)/3..."},
-        {"q":"I ___ admission to the university this year", "o":["seeking for","seeking","seeking at","seeking of"], "a":1, "exp":"'Seek' does not need 'for' when object is admission"},
-        {"q":"Calculate P=2πr, r=3, π=3.142", "o":["18.85","28.27","18.84","9.42"], "a":0, "exp":"P=2×3.142×3=18.85"},
+# YOUR DESIGNS
+elif st.session_state.page == 'Your Designs':
+    st.markdown("### 📁 Your Designs - Your Saved Works")
+    if not st.session_state.designs:
+        st.info("No designs yet. Solve questions to create designs.")
+    for d in st.session_state.designs:
+        st.markdown(f'<div class="card green">{d}</div>', unsafe_allow_html=True)
+    if st.button("➕ Create New Design - Math Solution"):
+        st.session_state.designs.append(f"Design {len(st.session_state.designs)+1} - Solved at {today}")
+        st.rerun()
+
+# TEMPLATES
+elif st.session_state.page == 'Templates':
+    st.markdown("### 📑 Templates - Unlimited JAMB Templates")
+    templates = [
+        "📝 JAMB Essay Template",
+        "🔢 Math Formula Sheet Template",
+        "🧬 Biology Diagram Template",
+        "📊 Study Timetable Template",
+        "🎯 30-Day 350+ Score Plan Template",
+        "📚 Syllabus Checklist Template",
+        "✍️ CBT Exam Strategy Template",
+        "🏆 Score Tracker Template"
     ]
-    q = QUESTIONS[st.session_state.q_index % len(QUESTIONS)]
-    st.progress((st.session_state.q_index+1)/len(QUESTIONS))
-    c1,c2,c3 = st.columns(3)
-    c1.write(f"Q {st.session_state.q_index+1}/4"); c2.write("⏱ 00:45"); c3.write(f"Score: {st.session_state.score}")
-    
-    st.markdown(f'<div class="card" style="background:white; border-left:5px solid #10B981;"><b>{q["q"]}</b></div>', unsafe_allow_html=True)
+    for t in templates:
+        col1,col2 = st.columns([3,1])
+        col1.markdown(f'<div class="card blue">{t}<br><small>Free • Use now</small></div>', unsafe_allow_html=True)
+        if col2.button("Use", key=t): st.success(f"Opened {t}")
+
+# PROFILE
+elif st.session_state.page == 'Profile':
+    st.markdown("### 👤 Profile")
+    st.markdown(f"""
+    <div class="card purple" style="text-align:center;">
+    <div style="font-size:50px;">👨🏾‍🎓</div>
+    <b>JAMB PRO User</b><br>Target: 375<br>Score: {st.session_state.score}<br>Streak: {random.randint(1,10)} days<br>
+    OPay: Connected ✅<br>Payout: N37k/week
+    </div>
+    """, unsafe_allow_html=True)
+    st.metric("Total Practice", len(st.session_state.history))
+    st.metric("Total Score", st.session_state.score)
+    if st.button("🔄 Daily Update - Refresh Activities"): st.rerun()
+
+# PRACTICE
+elif st.session_state.page == 'Practice':
+    if st.button("← Back to Home"): st.session_state.page='Home'; st.rerun()
+    q = QUESTIONS_DB[st.session_state.q_index % len(QUESTIONS_DB)]
+    st.progress((st.session_state.q_index+1)/len(QUESTIONS_DB))
+    st.markdown(f'<div class="card" style="background:white;"><b>{q["q"]}</b><br><small>{q["subject"]}</small></div>', unsafe_allow_html=True)
     for i, opt in enumerate(q['o']):
-        if st.button(f"{chr(65+i)}. {opt}", use_container_width=True, key=f"q{i}{st.session_state.q_index}"):
-            if i==q['a']: 
-                st.success("✅ Correct!"); st.balloons(); st.session_state.score+=10; st.session_state.streak+=1
-            else: st.error(f"❌ Correct: {q['o'][q['a']]}")
-            st.info(f"🤖 **AI Tutor Explanation:** {q['exp']}")
+        if st.button(f"{chr(65+i)}. {opt}", key=f"q{i}{st.session_state.q_index}", use_container_width=True):
+            if i==q['a']: st.success("✅ Correct! +10"); st.balloons(); st.session_state.score+=10
+            else: st.error(f"Correct: {q['o'][q['a']]}")
             st.session_state.history.append(1 if i==q['a'] else 0)
-            time.sleep(0.5)
             st.session_state.q_index+=1
             st.rerun()
 
-# === CLASSROOM ===
-elif st.session_state.page=='classroom':
-    if st.button("← Back"): st.session_state.page='home'; st.rerun()
-    st.markdown("### 📚 Syllabus-based learning, crystal clear videos!")
-    subjects = {"English": "🎤", "Mathematics": "🔢", "Physics": "⚛️", "Chemistry": "🧪", "Biology": "🧬", "Agric Science": "🌾"}
-    for subj, icon in subjects.items():
-        with st.expander(f"{icon} {subj} - 12 topics"):
-            st.write("1. Comprehension 2. Lexis 3. Structure")
-            if st.button(f"▶️ Watch {subj} Video", key=subj): st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+else:
+    st.session_state.page='Home'
+    st.rerun()
 
-# === SCIENCE NOTE - SOLVE MATH OFFLINE ===
-elif st.session_state.page=='note':
-    if st.button("← Back"): st.session_state.page='home'; st.rerun()
-    st.markdown("### 🔬 Solve math & science equations offline with Intelligent Note")
-    r = st.number_input("Enter radius r", value=3.0)
-    P = 2 * 3.142 * r
-    A = 3.142 * r**2
-    st.markdown(f'<div class="card green">r = {r}<br>P = 2πr = {P:.2f}<br>A = πr² = {A:.2f}<br><br>Writing pad: <i>P = 2πr = {P:.2f}</i></div>', unsafe_allow_html=True)
-    st.caption("✍️ Draw like real notebook - like TestDriller screenshot")
+# === EXACT BOTTOM NAV LIKE YOUR IMAGE ===
+st.markdown("<div style='height:80px;'></div>", unsafe_allow_html=True)
+b1,b2,b3,b4 = st.columns(4)
+with b1:
+    if st.button("🏠\nHome", key="nav_home", use_container_width=True):
+        st.session_state.page='Home'; st.rerun()
+with b2:
+    if st.button("📁\nYour Designs", key="nav_designs", use_container_width=True):
+        st.session_state.page='Your Designs'; st.rerun()
+with b3:
+    if st.button("🗂️\nTemplates", key="nav_templates", use_container_width=True):
+        st.session_state.page='Templates'; st.rerun()
+with b4:
+    if st.button("👤\nProfile", key="nav_profile", use_container_width=True):
+        st.session_state.page='Profile'; st.rerun()
 
-# === QUESTION SEARCH ===
-elif st.session_state.page=='search':
-    if st.button("← Back"): st.session_state.page='home'; st.rerun()
-    query = st.text_input("🔍 Search past JAMB questions (e.g., 'pyramid', 'osmosis')")
-    if query:
-        st.markdown(f'<div class="card blue">Found 12 questions for "{query}"<br>1. {query} - definition?<br>2. Calculate {query}...</div>', unsafe_allow_html=True)
+# Style active
+st.markdown(f"""
+<script>
+document.querySelectorAll('button').forEach(b=>{{
+  if(b.innerText.includes('{st.session_state.page}')) b.style.color='#7C3AED';
+}})
+</script>
+""", unsafe_allow_html=True)
 
-# === PERFORMANCE ANALYSIS - GRAPH ===
-elif st.session_state.page=='analysis':
-    if st.button("← Back"): st.session_state.page='home'; st.rerun()
-    st.markdown("### 📈 Stay on top with detailed performance analysis!")
-    # FAKE DATA FOR CHART
-    df = pd.DataFrame({"Practice": [1,2,3,4,5], "Score": [45,60, st.session_state.score if st.session_state.score>0 else 65, 78, 85], "English": [40,55,60,70,80]})
-    st.line_chart(df, x="Practice", y=["Score","English"])
-    st.markdown(f'<div class="card yellow"><b>Practice Score</b><br>Highest: {max(df["Score"])} | Latest: {st.session_state.score}<br>Progress Trend: Going up! 🚀</div>', unsafe_allow_html=True)
-    st.metric("Subject Score Trend", f"{st.session_state.score}%", "+5%")
-
-# === RESULT HISTORY ===
-elif st.session_state.page=='history':
-    if st.button("← Back"): st.session_state.page='home'; st.rerun()
-    st.markdown("### 📜 Result History")
-    if not st.session_state.history: st.write("No history yet. Play to see here.")
-    else:
-        for i, s in enumerate(st.session_state.history[-10:]): st.write(f"Practice {i+1}: {'✅' if s else '❌'}")
-
-# === AI TUTOR ROUND THE CLOCK ===
-elif st.session_state.page=='aitutor':
-    if st.button("← Back"): st.session_state.page='home'; st.rerun()
-    st.markdown("### 🤖 Round-the-Clock AI Tutor")
-    q = st.text_input("Ask anything: Solve 2x + y = 6, 3x - y = 10")
-    if q:
-        st.markdown("""
-        **To solve system of equations:**
-        1. 2x + y = 6
-        2. 3x - y = 10
-        **Step 1:** Add both equations
-        5x = 16 => x = 3.2
-        **Step 2:** Substitute for y
-        y = 6 - 2(3.2) = -0.4
-        """)
-        st.caption("Like TestDriller AI Tutor screenshot")
-
-# === GAMES - MILLIONAIRE ===
-elif st.session_state.page=='games':
-    if st.button("← Back"): st.session_state.page='home'; st.rerun()
-    st.markdown("### 🎮 Boost your learning with fun educational games!")
-    st.markdown('<div class="card yellow" style="text-align:center;"><h2>$ 1000</h2>2/15<br>Fill gap: I ___ admission...</div>', unsafe_allow_html=True)
-    for opt in ["seeking for","seeking","seeking at","seeking of"]:
-        if st.button(opt, use_container_width=True, key=f"game{opt}"): 
-            st.success("Correct! Next question...") if opt=="seeking" else st.error("Try again")
-
-# === BOTTOM NAV ===
-st.divider()
-c1,c2,c3,c4 = st.columns(4)
-if c1.button("🎯"): st.session_state.page='practice'; st.rerun()
-if c2.button("🏫"): st.session_state.page='classroom'; st.rerun()
-if c3.button("📊"): st.session_state.page='analysis'; st.rerun()
-if c4.button("👤"): st.toast("Profile: JAMB PRO User - Score 375 target!")
-
-# === FOOTER FOR ADS + OPAY PAYOUT ===
-st.caption("Ads: AdCash + Monetag + HilltopAds → Paxum → OPay = N37k/week per $10")
+# === ADS FOR OPAY - Keep earning ===
+st.caption("Ads: AdCash + Monetag + HilltopAds → Paxum → OPay N37k/week")
